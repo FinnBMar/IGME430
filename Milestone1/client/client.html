@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Pokedex API - Client</title>
+  <link rel="stylesheet" type="text/css" href="/style.css" />
+</head>
+<body>
+  <main>
+    <h1>Pokedex Explorer</h1>
+
+    <section>
+      <h2>Query Pokémon</h2>
+      <form id="queryForm">
+        <label for="name">Name (substring):</label>
+        <input id="name" name="name" type="text" placeholder="e.g., char" />
+
+        <label for="type" style="margin-left:8px;">Type:</label>
+        <input id="type" name="type" type="text" placeholder="e.g., Fire" />
+
+        <label for="limit" style="margin-left:8px;">Limit:</label>
+        <input id="limit" name="limit" type="number" min="1" max="151" value="50" style="width:80px;" />
+
+        <label for="offset" style="margin-left:8px;">Offset:</label>
+        <input id="offset" name="offset" type="number" min="0" value="0" style="width:80px;" />
+
+        <button id="getBtn" type="submit" style="margin-left:8px;">Get Pokémon</button>
+      </form>
+    </section>
+
+    <section style="margin-top: 16px;">
+      <h2>List of Types</h2>
+      <button id="typesBtn">Get Types</button>
+    </section>
+
+    <section id="results" style="margin-top: 24px;">
+      <!-- API results will render here -->
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const queryForm = document.getElementById('queryForm');
+      const getBtn = document.getElementById('getBtn');
+      const typesBtn = document.getElementById('typesBtn');
+      const resultsEl = document.getElementById('results');
+
+      const renderPokemonList = (data) => {
+        const { count, results } = data;
+        let html = `<p><strong>Total matching:</strong> ${count}</p>`;
+        if (!Array.isArray(results) || results.length === 0) {
+          html += '<p>No Pokémon found.</p>';
+          resultsEl.innerHTML = html;
+          return;
+        }
+
+        html += '<div style="display:flex;flex-wrap:wrap;gap:12px;">';
+        results.forEach((p) => {
+          html += `<div style="border:1px solid #ccc;padding:8px;width:200px;">
+            <h4>${p.name} (#${p.num})</h4>
+            <img src="${p.img}" alt="${p.name}" style="width:96px;height:96px;" />
+            <p><strong>Type:</strong> ${Array.isArray(p.type) ? p.type.join(', ') : ''}</p>
+            <p><strong>Height:</strong> ${p.height} — <strong>Weight:</strong> ${p.weight}</p>
+          </div>`;
+        });
+        html += '</div>';
+        resultsEl.innerHTML = html;
+      };
+
+      const renderTypes = (data) => {
+        const { count, types } = data;
+        let html = `<p><strong>Types (${count}):</strong></p>`;
+        if (!Array.isArray(types) || types.length === 0) {
+          html += '<p>No types found.</p>';
+          resultsEl.innerHTML = html;
+          return;
+        }
+        html += `<ul>${types.map((t) => `<li>${t}</li>`).join('')}</ul>`;
+        resultsEl.innerHTML = html;
+      };
+
+      // Query form submit
+      queryForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(queryForm);
+        const params = new URLSearchParams();
+
+        const name = formData.get('name');
+        const type = formData.get('type');
+        const limit = formData.get('limit');
+        const offset = formData.get('offset');
+
+        if (name && name.trim() !== '') params.append('name', name.trim());
+        if (type && type.trim() !== '') params.append('type', type.trim());
+        if (limit) params.append('limit', limit);
+        if (offset) params.append('offset', offset);
+
+        const url = `/api/pokemon?${params.toString()}`;
+
+        fetch(url, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+          },
+        })
+          .then((res) => res.text().then((text) => ({ res, text })))
+          .then(({ res, text }) => {
+            // Log raw JSON before parsing
+            // eslint-disable-next-line no-console
+            console.log('Raw response text:', text);
+
+            let obj = null;
+            try {
+              obj = JSON.parse(text);
+            } catch (err) {
+              // eslint-disable-next-line no-console
+              console.error('JSON parse error', err);
+            }
+
+            if (res.status >= 400) {
+              const msg = obj && obj.message ? obj.message : 'Error';
+              const id = obj && obj.id ? obj.id : '';
+              resultsEl.innerHTML = `<p><strong>Error:</strong> ${msg}</p><p><strong>ID:</strong> ${id}</p>`;
+              return;
+            }
+
+            if (obj) renderPokemonList(obj);
+            else resultsEl.innerHTML = '<p>Unexpected response.</p>';
+          })
+          .catch((err) => {
+            // eslint-disable-next-line no-console
+            console.error(err);
+            resultsEl.innerHTML = '<p>Error fetching data.</p>';
+          });
+      });
+
+      // Types button handler
+      typesBtn.addEventListener('click', () => {
+        fetch('/api/types', {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+          },
+        })
+          .then((res) => res.text().then((text) => ({ res, text })))
+          .then(({ res, text }) => {
+            // eslint-disable-next-line no-console
+            console.log('Raw response text:', text);
+
+            let obj = null;
+            try {
+              obj = JSON.parse(text);
+            } catch (err) {
+              // eslint-disable-next-line no-console
+              console.error('JSON parse error', err);
+            }
+
+            if (res.status >= 400) {
+              const msg = obj && obj.message ? obj.message : 'Error';
+              resultsEl.innerHTML = `<p><strong>Error:</strong> ${msg}</p>`;
+              return;
+            }
+
+            if (obj) renderTypes(obj);
+            else resultsEl.innerHTML = '<p>Unexpected response.</p>';
+          })
+          .catch((err) => {
+            // eslint-disable-next-line no-console
+            console.error(err);
+            resultsEl.innerHTML = '<p>Error fetching types.</p>';
+          });
+      });
+    });
+  </script>
+</body>
+</html>

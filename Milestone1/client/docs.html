@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Pokedex API - Docs</title>
+  <link rel="stylesheet" type="text/css" href="/style.css" />
+  <style>
+    body { max-width: 900px; margin: 24px auto; font-family: sans-serif; line-height:1.5; }
+    pre { background:#f4f4f4; padding:8px; overflow:auto; }
+    code { font-family: monospace; }
+    h1,h2,h3 { margin-top: 18px; }
+    table { border-collapse: collapse; width:100%; }
+    th, td { border:1px solid #ddd; padding:8px; text-align:left; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Pokedex API — Documentation</h1>
+
+    <section>
+      <h2>Overview</h2>
+      <p>The API serves Pokémon data (from <code>data/pokedex.json</code>). Responses are JSON by default. Include <code>Accept: application/json</code> header in requests (if omitted, JSON is returned).</p>
+    </section>
+
+    <section>
+      <h2>Endpoints</h2>
+
+      <h3>GET /api/pokemon</h3>
+      <p>Returns a paginated list of Pokémon. Supports the HEAD method (headers only) as well.</p>
+      <h4>Query Parameters</h4>
+      <table>
+        <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>name</code></td><td>string</td><td>optional</td><td>Case-insensitive substring match on Pokémon name.</td></tr>
+          <tr><td><code>type</code></td><td>string</td><td>optional</td><td>Filter by exact type name (e.g., <code>Fire</code>).</td></tr>
+          <tr><td><code>limit</code></td><td>integer</td><td>optional</td><td>Maximum number of results (default: 50).</td></tr>
+          <tr><td><code>offset</code></td><td>integer</td><td>optional</td><td>Skip the first <code>offset</code> results (default: 0).</td></tr>
+        </tbody>
+      </table>
+      <h4>Example</h4>
+      <pre><code>curl -i "http://localhost:3000/api/pokemon?type=Fire&limit=10"</code></pre>
+      <h4>Success Response (200)</h4>
+      <pre><code>{
+  "count": 12,
+  "results": [
+    {
+      "id": 4,
+      "num": "004",
+      "name": "Charmander",
+      ...
+    }
+  ]
+}</code></pre>
+
+      <h3>GET /api/pokemon?id=NNN</h3>
+      <p>Returns a single Pokémon by numeric <code>id</code>. Supports HEAD (headers only).</p>
+      <h4>Example</h4>
+      <pre><code>curl -i "http://localhost:3000/api/pokemon?id=1"</code></pre>
+      <h4>404 Response</h4>
+      <pre><code>{
+  "message": "Not found",
+  "id": "notFound"
+}</code></pre>
+
+      <h3>GET /api/types</h3>
+      <p>Returns a list of all distinct Pokémon types.</p>
+      <h4>Example</h4>
+      <pre><code>curl -i "http://localhost:3000/api/types"</code></pre>
+      <h4>Success Response (200)</h4>
+      <pre><code>{
+  "count": 18,
+  "types": ["Bug","Dragon","Electric",...]
+}</code></pre>
+
+      <h3>Unknown API endpoints</h3>
+      <p>Any unknown /api/* endpoint returns <code>404</code> with a JSON body:</p>
+      <pre><code>{
+  "message": "API endpoint not found",
+  "id": "notFound"
+}</code></pre>
+    </section>
+
+    <section>
+      <h2>Notes</h2>
+      <ul>
+        <li>All responses include <code>Content-Type</code> and <code>Content-Length</code> headers.</li>
+        <li>HEAD requests return the same status and headers as GET but do not include a response body.</li>
+        <li>Data is loaded into memory from <code>data/pokedex.json</code> at server startup. Any updates to data at runtime are in-memory only and will be lost on restart.</li>
+        <li>Code comments and some bug fixing mostly generated using ChatGPT.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

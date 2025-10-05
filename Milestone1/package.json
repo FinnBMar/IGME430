@@ -1,0 +1,27 @@
+{
+  "name": "milestone1",
+  "version": "1.0.0",
+  "description": "First Project Milestone 1",
+  "homepage": "https://github.com/FinnBMar/IGME430#readme",
+  "bugs": {
+    "url": "https://github.com/FinnBMar/IGME430/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FinnBMar/IGME430.git"
+  },
+  "license": "UNLICENSED",
+  "author": "Finn Marable",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/server.js",
+    "pretest": "eslint ./src --fix",
+    "test": "echo \"Tests complete\""
+  },
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-plugin-import": "^2.32.0"
+  }
+}
